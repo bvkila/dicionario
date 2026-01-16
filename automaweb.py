@@ -11,15 +11,44 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common.exceptions import TimeoutException
+from tkinter import messagebox
 
 
 class AutomacaoWeb:
 
     '''
-    Explicações...
+    A seguinte classe fornece uma base robusta para tarefas comuns de RPA (Robotic Process Automation) dentro da web.
+    Sua estrutura consiste em:
+
+    1. NAVEGAÇÕES DENTRO DO DRIVER
+    
+    Gerenciamento de Driver: inicialização otimizada do Microsoft Edge, incluindo suporte para modo Headless (segundo plano).
+    Controle de Abas: abertura, troca e fechamento inteligente de abas.
+    
+    
+    2. INTERAÇÕES COM A PÁGINA
+
+    Interações Avançadas: cliques, digitação (com limpeza automática), Hover (passar o mouse) e seleção de dropdowns.
+    Tratamento de Esperas: uso nativo de `WebDriverWait` para garantir que os elementos existam antes da interação, reduzindo erros de sincronismo.
+    Captura de Tela: método integrado para screenshots de auditoria.
+    Suporte a Iframes: facilidade para entrar e sair de contextos de frames.
+
+    3. VERIFICAÇÕES
+
+    Verificação de Textos: verifica se um texto específico existe na página.
+    Verificação de Elementos: verifica se um elemento específico existe na página.
+
     '''
 
-    def __init__(self, headless=False):
+    def __init__(self):
+        
+        self.driver = None
+        self.timeout = 10 #define tempo de espera padrão
+
+
+### NAVEGAÇÕES DENTRO DO DRIVER
+
+    def iniciar_driver(self, headless=False):
         
         #inicializa o driver e configura as opções do navegador.
         edge_options = Options()
@@ -38,13 +67,6 @@ class AutomacaoWeb:
         else:
             #se tiver interface, maximiza normal
             self.driver.maximize_window()
-        
-        self.driver = webdriver.Edge()
-        self.timeout = 10 #define tempo de espera padrão
-
-
-
-### NAVEGAÇÕES DENTRO DO DRIVER
 
     def abrir_url(self, url):
         
@@ -59,7 +81,7 @@ class AutomacaoWeb:
             self.driver.switch_to.new_window('tab') 
             self.driver.get(url)
         except Exception as e:
-            print(f"Erro ao abrir nova aba: {e}")
+            messagebox.showerror(f"Erro ao abrir nova aba: {e}")
     
     def alternar_aba(self, indice):
         #muda o foco para a aba especificada pelo índice (0 é a primeira, 1 é a segunda...).
@@ -67,7 +89,7 @@ class AutomacaoWeb:
             abas = self.driver.window_handles
             self.driver.switch_to.window(abas[indice])
         except Exception as e:
-            print(f"Erro ao mudar para a aba {indice}: {e}")
+            messagebox.showerror(f"Erro ao mudar para a aba {indice}: {e}")
         
     def fechar_aba_atual(self):
     
@@ -80,7 +102,7 @@ class AutomacaoWeb:
             if len(self.driver.window_handles) > 0:
                 self.driver.switch_to.window(self.driver.window_handles[-1])
         except Exception as e:
-            print(f"Erro ao fechar aba: {e}")
+            messagebox.showerror(f"Erro ao fechar aba: {e}")
 
     def fechar_navegador(self):
         
@@ -98,7 +120,7 @@ class AutomacaoWeb:
             elemento = WebDriverWait(self.driver, self.timeout).until(EC.element_to_be_clickable((By.XPATH, xpath)))
             elemento.click()
         except Exception as e:
-            print(f"Erro ao clicar no elemento {xpath}: {e}")
+            messagebox.showerror(f"Erro ao clicar no elemento {xpath}: {e}")
 
     def digitar(self, xpath, texto):
         
@@ -108,7 +130,7 @@ class AutomacaoWeb:
             elemento.clear()
             elemento.send_keys(texto)
         except Exception as e:
-            print(f"Erro ao digitar no elemento {xpath}: {e}")
+            messagebox.showerror(f"Erro ao digitar no elemento {xpath}: {e}")
     
     def passar_mouse(self, xpath):
         
@@ -118,7 +140,7 @@ class AutomacaoWeb:
             actions = ActionChains(self.driver)
             actions.move_to_element(elemento).perform()
         except Exception as e:
-            print(f"Erro ao passar mouse sobre {xpath}: {e}")
+            messagebox.showerror(f"Erro ao passar mouse sobre {xpath}: {e}")
     
     def selecionar_texto(self, xpath, texto):
 
@@ -126,7 +148,7 @@ class AutomacaoWeb:
         try:
             Select(WebDriverWait(self.driver, self.timeout).until(EC.presence_of_element_located((By.XPATH, xpath)))).select_by_visible_text(texto)
         except Exception as e:
-            print(f"Erro ao selecionar {texto} no elemento {xpath}: {e}")
+            messagebox.showerror(f"Erro ao selecionar {texto} no elemento {xpath}: {e}")
 
     def selecionar_valor(self, xpath, valor):
 
@@ -134,7 +156,7 @@ class AutomacaoWeb:
         try:
             Select(WebDriverWait(self.driver, self.timeout).until(EC.presence_of_element_located((By.XPATH, xpath)))).select_by_value(valor)
         except Exception as e:
-            print(f"Erro ao selecionar {valor} no elemento {xpath}: {e}")
+            messagebox.showerror(f"Erro ao selecionar {valor} no elemento {xpath}: {e}")
 
     def limpar(self, xpath):
 
@@ -142,7 +164,7 @@ class AutomacaoWeb:
         try:
             elemento = WebDriverWait(self.driver, self.timeout).until(EC.presence_of_element_located((By.XPATH, xpath))); elemento.clear()
         except Exception as e:
-            print(f"Erro ao limpar o conteúdo do elemento {xpath}: {e}")
+            messagebox.showerror(f"Erro ao limpar o conteúdo do elemento {xpath}: {e}")
     
     def obter_texto(self, xpath):
 
@@ -151,7 +173,7 @@ class AutomacaoWeb:
             elemento = WebDriverWait(self.driver, self.timeout).until(EC.presence_of_element_located((By.XPATH, xpath)))
             return elemento.text
         except Exception as e:
-            print(f"Erro ao obter o texto do elemento {xpath}: {e}")
+            messagebox.showerror(f"Erro ao obter o texto do elemento {xpath}: {e}")
     
     def obter_atributo(self, xpath, atributo):
 
@@ -160,7 +182,7 @@ class AutomacaoWeb:
             elemento = WebDriverWait(self.driver, self.timeout).until(EC.presence_of_element_located((By.XPATH, xpath)))
             return elemento.get_attribute(atributo)
         except Exception as e:
-            print(f"Erro ao obter o atributo do elemento {xpath}: {e}")
+            messagebox.showerror(f"Erro ao obter o atributo do elemento {xpath}: {e}")
     
     def rolar_ate_elemento(self, xpath):
         
@@ -169,7 +191,7 @@ class AutomacaoWeb:
             elemento = WebDriverWait(self.driver, self.timeout).until(EC.presence_of_element_located((By.XPATH, xpath)))
             self.driver.execute_script("arguments[0].scrollIntoView(true);", elemento)
         except Exception as e:
-            print(f"Erro ao rolar até o elemento {xpath}: {e}")
+            messagebox.showerror(f"Erro ao rolar até o elemento {xpath}: {e}")
     
     def aguardar_elemento_sumir(self, xpath):
         
@@ -177,7 +199,7 @@ class AutomacaoWeb:
         try:
             WebDriverWait(self.driver, self.timeout).until(EC.invisibility_of_element_located((By.XPATH, xpath)))
         except Exception as e:
-            print(f"Erro ou timeout ao aguardar elemento sumir {xpath}: {e}")
+            messagebox.showerror(f"Erro ou timeout ao aguardar elemento sumir {xpath}: {e}")
     
     def encontrar_elementos(self, xpath):
         
@@ -185,7 +207,7 @@ class AutomacaoWeb:
         try:
             return self.driver.find_elements(By.XPATH, xpath)
         except Exception as e:
-            print(f"Erro ao encontrar elementos {xpath}: {e}")
+            messagebox.showerror(f"Erro ao encontrar elementos {xpath}: {e}")
 
     def tirar_screenshot(self, nome_arquivo):
         
@@ -193,7 +215,7 @@ class AutomacaoWeb:
         try:
             self.driver.save_screenshot(f"{nome_arquivo}.png")
         except Exception as e:
-            print(f"Erro ao salvar screenshot: {e}")
+            messagebox.showerror(f"Erro ao salvar screenshot: {e}")
     
     def entrar_iframe(self, xpath):
         
@@ -201,7 +223,7 @@ class AutomacaoWeb:
         try:
             WebDriverWait(self.driver,20).until(EC.frame_to_be_available_and_switch_to_it((By.XPATH, xpath)))
         except Exception as e:
-            print(f"Erro ao entrar no iframe {xpath}: {e}")
+            messagebox.showerror(f"Erro ao entrar no iframe {xpath}: {e}")
 
     def sair_iframe(self):
         
@@ -225,7 +247,7 @@ class AutomacaoWeb:
             elemento = WebDriverWait(self.driver, timeout).until(EC.presence_of_element_located((By.XPATH, xpath)))
             return elemento.is_selected()
         except Exception as e:
-            print(f"Erro ao obter o texto do elemento {xpath}: {e}")
+            messagebox.showerror(f"Erro ao obter o texto do elemento {xpath}: {e}")
     
     def verifica_habilitado(self, xpath, timeout=None):
  
@@ -240,7 +262,7 @@ class AutomacaoWeb:
             elemento = WebDriverWait(self.driver, timeout).until(EC.presence_of_element_located((By.XPATH, xpath)))
             return elemento.is_enabled()
         except Exception as e:
-            print(f"Erro ao obter o texto do elemento {xpath}: {e}")
+            messagebox.showerror(f"Erro ao obter o texto do elemento {xpath}: {e}")
 
     def verifica_clicavel(self, xpath, timeout=None):
     
@@ -259,7 +281,7 @@ class AutomacaoWeb:
             #se o tempo (10s) passar e não ficar clicável, retorna False
             return False
         except Exception as e:
-            print(f"Erro ao verificar clicabilidade de {xpath}: {e}")
+            messagebox.showerror(f"Erro ao verificar clicabilidade de {xpath}: {e}")
             return False
     
     def verifica_existe(self, xpath):
@@ -277,7 +299,7 @@ class AutomacaoWeb:
         except TimeoutException:
             return False
         except Exception as e:
-            print(f"Erro inesperado ao verificar elemento {xpath}: {e}")
+            messagebox.showerror(f"Erro inesperado ao verificar elemento {xpath}: {e}")
             return False
 
 import os
@@ -289,6 +311,7 @@ class FileExplorer:
     
     '''
     Classe destinada à manipulação de arquivos e pastas no sistema operacional.
+    Sua estrutura consiste em:
     '''
 
     def __init__(self):
@@ -308,10 +331,10 @@ class FileExplorer:
             novo_caminho = os.path.join(diretorio, novo_nome)
             
             os.rename(caminho_atual, novo_caminho)
-            print(f"Arquivo renomeado para: {novo_nome}")
+            messagebox.showerror(f"Arquivo renomeado para: {novo_nome}")
             return novo_caminho # Retorna o novo path para uso futuro
         except Exception as e:
-            print(f"Erro ao renomear arquivo {caminho_atual}: {e}")
+            messagebox.showerror(f"Erro ao renomear arquivo {caminho_atual}: {e}")
 
     def mover_arquivo(self, origem, destino):
         
@@ -319,18 +342,18 @@ class FileExplorer:
         #o destino pode ser uma pasta ou um novo caminho completo de arquivo.
         try:
             shutil.move(origem, destino)
-            print(f"Arquivo movido de {origem} para {destino}")
+            messagebox.showerror(f"Arquivo movido de {origem} para {destino}")
         except Exception as e:
-            print(f"Erro ao mover arquivo: {e}")
+            messagebox.showerror(f"Erro ao mover arquivo: {e}")
 
     def copiar_arquivo(self, origem, destino):
         
         #copia um arquivo mantendo os metadados (datas de criação, etc).
         try:
             shutil.copy2(origem, destino)
-            print(f"Arquivo copiado para {destino}")
+            messagebox.showerror(f"Arquivo copiado para {destino}")
         except Exception as e:
-            print(f"Erro ao copiar arquivo: {e}")
+            messagebox.showerror(f"Erro ao copiar arquivo: {e}")
 
     def excluir_arquivo(self, caminho):
         
@@ -338,11 +361,11 @@ class FileExplorer:
         try:
             if os.path.exists(caminho):
                 os.remove(caminho)
-                print(f"Arquivo excluído: {caminho}")
+                messagebox.showerror(f"Arquivo excluído: {caminho}")
             else:
-                print(f"Arquivo não encontrado para exclusão: {caminho}")
+                messagebox.showerror(f"Arquivo não encontrado para exclusão: {caminho}")
         except Exception as e:
-            print(f"Erro ao excluir arquivo: {e}")
+            messagebox.showerror(f"Erro ao excluir arquivo: {e}")
 
 ### GERENCIAMENTO DE PASTAS
 
@@ -352,9 +375,9 @@ class FileExplorer:
         #exist_ok=True evita erro se a pasta já existir.
         try:
             os.makedirs(caminho_pasta, exist_ok=True)
-            print(f"Pasta garantida: {caminho_pasta}")
+            messagebox.showerror(f"Pasta garantida: {caminho_pasta}")
         except Exception as e:
-            print(f"Erro ao criar pasta: {e}")
+            messagebox.showerror(f"Erro ao criar pasta: {e}")
 
     def listar_arquivos(self, diretorio, extensao=None):
         
@@ -366,7 +389,7 @@ class FileExplorer:
                 arquivos = [f for f in arquivos if f.endswith(extensao)]
             return arquivos
         except Exception as e:
-            print(f"Erro ao listar arquivos em {diretorio}: {e}")
+            messagebox.showerror(f"Erro ao listar arquivos em {diretorio}: {e}")
             return []
 
 ### UTILITÁRIOS E VERIFICAÇÕES
@@ -391,5 +414,5 @@ class FileExplorer:
             arquivo_recente = max(caminhos_completos, key=os.path.getmtime)
             return arquivo_recente
         except Exception as e:
-            print(f"Erro ao buscar arquivo recente: {e}")
+            messagebox.showerror(f"Erro ao buscar arquivo recente: {e}")
             return None
