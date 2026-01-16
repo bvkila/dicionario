@@ -304,14 +304,15 @@ class AutomacaoWeb:
 
 import os
 import shutil
-import time # Útil para aguardar downloads antes de mover
-from datetime import datetime
+from tkinter import filedialog
 
 class FileExplorer:
     
     '''
     Classe destinada à manipulação de arquivos e pastas no sistema operacional.
     Sua estrutura consiste em:
+
+    ...continuação
     '''
 
     def __init__(self):
@@ -320,6 +321,31 @@ class FileExplorer:
         pass
 
 ### MANIPULAÇÃO DE ARQUIVOS
+
+    def selecionar_arquivo(self, titulo="Selecione um arquivo", tipos_arquivos=[("Todos os arquivos", "*.*")]):
+        
+        #abre uma janela para o usuário escolher um arquivo.
+        #retorna o caminho completo do arquivo ou None (se cancelado).
+        try:
+            caminho = filedialog.askopenfilename(
+                title=titulo,
+                filetypes=tipos_arquivos
+            )
+            return caminho if caminho else None
+        except Exception as e:
+            messagebox.showerror("Erro", f"Erro ao selecionar arquivo: {e}")
+            return None
+    
+    def selecionar_multiplos_arquivos(self, titulo="Selecione os arquivos"):
+        
+        #permite selecionar vários arquivos de uma vez.
+        #retorna uma lista de caminhos.
+        try:
+            arquivos = filedialog.askopenfilenames(title=titulo)
+            return list(arquivos) if arquivos else []
+        except Exception as e:
+            messagebox.showerror("Erro", f"Erro ao selecionar arquivos: {e}")
+            return []
 
     def renomear_arquivo(self, caminho_atual, novo_nome):
         
@@ -369,6 +395,17 @@ class FileExplorer:
 
 ### GERENCIAMENTO DE PASTAS
 
+    def selecionar_pasta(self, titulo="Selecione uma pasta"):
+        
+        #abre uma janela para o usuário escolher um diretório.
+        #retorna o caminho da pasta ou None (se cancelado).
+        try:
+            pasta = filedialog.askdirectory(title=titulo)
+            return pasta if pasta else None
+        except Exception as e:
+            messagebox.showerror("Erro", f"Erro ao selecionar pasta: {e}")
+            return None
+
     def criar_pasta(self, caminho_pasta):
         
         #cria uma pasta (e subpastas se necessário). 
@@ -391,6 +428,56 @@ class FileExplorer:
         except Exception as e:
             messagebox.showerror(f"Erro ao listar arquivos em {diretorio}: {e}")
             return []
+    
+    def listar_recursivo(self, diretorio, extensao=None):
+        
+        #lista TODOS os arquivos, incluindo os que estão em subpastas
+        arquivos_encontrados = []
+        try:
+            for raiz, diretorios, arquivos in os.walk(diretorio):
+                for arquivo in arquivos:
+                    if extensao is None or arquivo.endswith(extensao):
+                        arquivos_encontrados.append(os.path.join(raiz, arquivo))
+            return arquivos_encontrados
+        except Exception as e:
+            messagebox.showerror("Erro", f"Erro na busca recursiva: {e}")
+            return []
+
+    def pasta_esta_vazia(self, caminho_pasta):
+       
+        #verifica se uma pasta não contém arquivos ou subpastas
+        return not any(os.scandir(caminho_pasta))
+    
+    def excluir_pasta_completa(self, caminho_pasta):
+        
+        #remove a pasta e todo o seu conteúdo (arquivos e subpastas)
+        try:
+            if os.path.exists(caminho_pasta):
+                shutil.rmtree(caminho_pasta)
+                messagebox.showinfo("Sucesso", f"Pasta removida: {caminho_pasta}")
+            else:
+                messagebox.showwarning("Aviso", "Pasta não encontrada.")
+        except Exception as e:
+            messagebox.showerror("Erro", f"Erro ao excluir pasta: {e}")
+
+    def compactar_para_zip(self, caminho_origem, nome_zip):
+        
+        #cria um arquivo .zip de uma pasta ou arquivo
+        #nome_zip não deve conter a extensão .zip ao final
+        try:
+            shutil.make_archive(nome_zip, 'zip', caminho_origem)
+            messagebox.showinfo("Sucesso", f"Arquivo {nome_zip}.zip criado!")
+        except Exception as e:
+            messagebox.showerror("Erro", f"Erro ao compactar: {e}")
+
+    def descompactar_zip(self, arquivo_zip, destino):
+        
+        #extrai o conteúdo de um arquivo .zip
+        try:
+            shutil.unpack_archive(arquivo_zip, destino)
+            messagebox.showinfo("Sucesso", f"Extraído em: {destino}")
+        except Exception as e:
+            messagebox.showerror("Erro", f"Erro ao descompactar: {e}")
 
 ### UTILITÁRIOS E VERIFICAÇÕES
 
