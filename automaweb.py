@@ -30,6 +30,8 @@ class AutomacaoWeb:
         
         self.timeout = 10
 
+
+
 ### NAVEGAÇÕES DENTRO DO DRIVER
 
     def abrir_url(self, url):
@@ -73,6 +75,8 @@ class AutomacaoWeb:
         #fecha o navegador e encerra a sessão do driver.
         self.driver.quit()
 
+
+
 ### INTERAÇÕES COM A PÁGINA
 
     def clicar(self, xpath):
@@ -95,6 +99,7 @@ class AutomacaoWeb:
             print(f"Erro ao digitar no elemento {xpath}: {e}")
     
     def passar_mouse(self, xpath):
+        
         #simula a ação de mover o cursor do mouse sobre o elemento (Hover).
         try:
             elemento = WebDriverWait(self.driver, self.timeout).until(EC.presence_of_element_located((By.XPATH, xpath)))
@@ -155,6 +160,7 @@ class AutomacaoWeb:
             print(f"Erro ao rolar até o elemento {xpath}: {e}")
     
     def aguardar_elemento_sumir(self, xpath):
+        
         #aguarda até que o elemento não esteja mais visível.
         try:
             WebDriverWait(self.driver, self.timeout).until(EC.invisibility_of_element_located((By.XPATH, xpath)))
@@ -162,6 +168,7 @@ class AutomacaoWeb:
             print(f"Erro ou timeout ao aguardar elemento sumir {xpath}: {e}")
     
     def encontrar_elementos(self, xpath):
+        
         #retorna uma lista com todos os elementos identificados pelo xpath.
         try:
             return self.driver.find_elements(By.XPATH, xpath)
@@ -169,6 +176,7 @@ class AutomacaoWeb:
             print(f"Erro ao encontrar elementos {xpath}: {e}")
 
     def tirar_screenshot(self, nome_arquivo):
+        
         #salva uma imagem da tela atual.
         try:
             self.driver.save_screenshot(f"{nome_arquivo}.png")
@@ -176,6 +184,7 @@ class AutomacaoWeb:
             print(f"Erro ao salvar screenshot: {e}")
     
     def entrar_iframe(self, xpath):
+        
         #muda o foco do driver para dentro de um iframe.
         try:
             WebDriverWait(self.driver,20).until(EC.frame_to_be_available_and_switch_to_it((By.XPATH, xpath)))
@@ -183,8 +192,11 @@ class AutomacaoWeb:
             print(f"Erro ao entrar no iframe {xpath}: {e}")
 
     def sair_iframe(self):
+        
         # Volta o foco para a página principal.
         self.driver.switch_to.default_content()
+
+
 
 ### VERIFICAÇÕES
 
@@ -198,7 +210,7 @@ class AutomacaoWeb:
 
         #verifica se um elemento (como checkbox) está selecionado.
         try:
-            elemento = WebDriverWait(self.driver, self.timeout).until(EC.presence_of_element_located((By.XPATH, xpath)))
+            elemento = WebDriverWait(self.driver, timeout).until(EC.presence_of_element_located((By.XPATH, xpath)))
             return elemento.is_selected()
         except Exception as e:
             print(f"Erro ao obter o texto do elemento {xpath}: {e}")
@@ -213,7 +225,7 @@ class AutomacaoWeb:
 
         #verifica se um elemento está habilitado
         try:
-            elemento = WebDriverWait(self.driver, self.timeout).until(EC.presence_of_element_located((By.XPATH, xpath)))
+            elemento = WebDriverWait(self.driver, timeout).until(EC.presence_of_element_located((By.XPATH, xpath)))
             return elemento.is_enabled()
         except Exception as e:
             print(f"Erro ao obter o texto do elemento {xpath}: {e}")
@@ -229,7 +241,7 @@ class AutomacaoWeb:
         #verifica se o elemento está visível E habilitado para clique.
         try:
             #o wait.until vai esperar até que o elemento seja clicável ou o tempo esgote
-            WebDriverWait(self.driver, self.timeout).until(EC.element_to_be_clickable((By.XPATH, xpath)))
+            WebDriverWait(self.driver, timeout).until(EC.element_to_be_clickable((By.XPATH, xpath)))
             return True
         except TimeoutException:
             #se o tempo (10s) passar e não ficar clicável, retorna False
@@ -239,10 +251,16 @@ class AutomacaoWeb:
             return False
     
     def verifica_existe(self, xpath):
-        
+
+        #como não dá pra passar o self.timeout no argumento da função,
+        #tem-se que passar como None e definir o timeout dentro da função.
+        #se não for seleiconado um valor pro timeout ele usa o self.timeout.
+        if timeout is None:
+            timeout = self.timeout
+
         #verifica se um elemento existe na página (Retorna True ou False).
         try:
-            WebDriverWait(self.driver, self.timeout).until(EC.presence_of_element_located((By.XPATH, xpath)))
+            WebDriverWait(self.driver, timeout).until(EC.presence_of_element_located((By.XPATH, xpath)))
             return True
         except TimeoutException:
             return False
