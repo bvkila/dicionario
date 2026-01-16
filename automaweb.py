@@ -25,10 +25,22 @@ class AutomacaoWeb:
         edge_options = Options()
         edge_options.add_experimental_option("excludeSwitches", ["enable-automation"])
         edge_options.add_experimental_option('useAutomationExtension', False)
-        self.driver = webdriver.Edge()
-        self.driver.maximize_window()
         
-        self.timeout = 10
+        #se headless for verdadeiro, configura o driver para rodar em modo headless
+        if headless:
+            edge_options.add_argument("--headless=new") 
+        self.driver = webdriver.Edge(options=edge_options)
+        
+        #configura o tamanho da janela para headless
+        if headless:
+            #em headless, é bom definir um tamanho fixo para evitar que o site carregue em formato mobile (800x600)
+            self.driver.set_window_size(1920, 1080)
+        else:
+            #se tiver interface, maximiza normal
+            self.driver.maximize_window()
+        
+        self.driver = webdriver.Edge()
+        self.timeout = 10 #define tempo de espera padrão
 
 
 
@@ -267,3 +279,117 @@ class AutomacaoWeb:
         except Exception as e:
             print(f"Erro inesperado ao verificar elemento {xpath}: {e}")
             return False
+
+import os
+import shutil
+import time # Útil para aguardar downloads antes de mover
+from datetime import datetime
+
+class FileExplorer:
+    
+    '''
+    Classe destinada à manipulação de arquivos e pastas no sistema operacional.
+    '''
+
+    def __init__(self):
+        
+        #inicializador simples, pode ser expandido se necessário manter estados (ex: pasta padrão)
+        pass
+
+### MANIPULAÇÃO DE ARQUIVOS
+
+    def renomear_arquivo(self, caminho_atual, novo_nome):
+        
+        #renomeia um arquivo mantendo-o na mesma pasta.
+        #'caminho_atual' deve ser o path completo.
+        #'novo_nome' deve ser apenas o nome do arquivo com extensão (ex: "relatorio_final.pdf").
+        try:
+            diretorio = os.path.dirname(caminho_atual)
+            novo_caminho = os.path.join(diretorio, novo_nome)
+            
+            os.rename(caminho_atual, novo_caminho)
+            print(f"Arquivo renomeado para: {novo_nome}")
+            return novo_caminho # Retorna o novo path para uso futuro
+        except Exception as e:
+            print(f"Erro ao renomear arquivo {caminho_atual}: {e}")
+
+    def mover_arquivo(self, origem, destino):
+        
+        #move um arquivo de 'origem' para 'destino'.
+        #o destino pode ser uma pasta ou um novo caminho completo de arquivo.
+        try:
+            shutil.move(origem, destino)
+            print(f"Arquivo movido de {origem} para {destino}")
+        except Exception as e:
+            print(f"Erro ao mover arquivo: {e}")
+
+    def copiar_arquivo(self, origem, destino):
+        
+        #copia um arquivo mantendo os metadados (datas de criação, etc).
+        try:
+            shutil.copy2(origem, destino)
+            print(f"Arquivo copiado para {destino}")
+        except Exception as e:
+            print(f"Erro ao copiar arquivo: {e}")
+
+    def excluir_arquivo(self, caminho):
+        
+        #remove um arquivo permanentemente.
+        try:
+            if os.path.exists(caminho):
+                os.remove(caminho)
+                print(f"Arquivo excluído: {caminho}")
+            else:
+                print(f"Arquivo não encontrado para exclusão: {caminho}")
+        except Exception as e:
+            print(f"Erro ao excluir arquivo: {e}")
+
+### GERENCIAMENTO DE PASTAS
+
+    def criar_pasta(self, caminho_pasta):
+        
+        #cria uma pasta (e subpastas se necessário). 
+        #exist_ok=True evita erro se a pasta já existir.
+        try:
+            os.makedirs(caminho_pasta, exist_ok=True)
+            print(f"Pasta garantida: {caminho_pasta}")
+        except Exception as e:
+            print(f"Erro ao criar pasta: {e}")
+
+    def listar_arquivos(self, diretorio, extensao=None):
+        
+        #retorna uma lista com os nomes dos arquivos no diretório.
+        #se 'extensao' for informado (ex: '.pdf'), filtra a lista.
+        try:
+            arquivos = os.listdir(diretorio)
+            if extensao:
+                arquivos = [f for f in arquivos if f.endswith(extensao)]
+            return arquivos
+        except Exception as e:
+            print(f"Erro ao listar arquivos em {diretorio}: {e}")
+            return []
+
+### UTILITÁRIOS E VERIFICAÇÕES
+
+    def verifica_existe(self, caminho):
+        
+        #verifica se um arquivo ou pasta existe.
+        return os.path.exists(caminho)
+
+    def obter_arquivo_mais_recente(self, diretorio, extensao=None):
+
+        #útil para pegar o último arquivo baixado na pasta de Downloads.
+        try:
+            arquivos = self.listar_arquivos(diretorio, extensao)
+            if not arquivos:
+                return None
+            
+            #reconstrói os caminhos completos
+            caminhos_completos = [os.path.join(diretorio, f) for f in arquivos]
+            
+            #retorna o arquivo com a data de modificação mais recente
+            arquivo_recente = max(caminhos_completos, key=os.path.getmtime)
+            return arquivo_recente
+        except Exception as e:
+            print(f"Erro ao buscar arquivo recente: {e}")
+            return None
